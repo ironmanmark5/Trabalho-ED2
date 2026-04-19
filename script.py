@@ -1,11 +1,13 @@
-import math, os, csv
+import math, os, csv, re
 import matplotlib.pyplot as plt
+from random_word import RandomWords
 
 def le_arquivo_quincas():
     lista_palavras = []
+    padrao = re.compile(r'[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+')
     with open("quincasborba-utf8-limpo.txt", "r", encoding="utf-8") as arquivo:
         for linha in arquivo:
-            palavras = linha.split() # funcao split é para separar palavra por palavra
+            palavras = padrao.findall(linha)
             for palavra in palavras:
                 palavra = palavra.lower()
                 if palavra not in lista_palavras:
@@ -15,15 +17,36 @@ def le_arquivo_quincas():
 
 def le_arquivo_tale():
     lista_palavras = []
+    padrao = re.compile(r'[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]+')
     with open("tale.txt", "r", encoding="utf-8") as arquivo:
         for linha in arquivo:
-            palavras = linha.split() # funcao split é para separar palavra por palavra
+            palavras = padrao.findall(linha)
             for palavra in palavras:
                 palavra = palavra.lower()
                 if palavra not in lista_palavras:
                     lista_palavras.append(palavra)
                     
     return lista_palavras
+
+def gerar_lista_palavras_falhas():
+    lista_palavras_falhas = []
+    r = RandomWords()
+
+    lista_palavras_quincas = le_arquivo_quincas()
+    lista_palavras_tale = le_arquivo_tale()
+    palavras_existentes = lista_palavras_quincas + lista_palavras_tale
+
+    while len(lista_palavras_falhas) < 1000:
+        palavra_falha = r.get_random_word()
+
+        if palavra_falha is None:
+            continue
+
+        if (palavra_falha not in palavras_existentes and palavra_falha not in lista_palavras_falhas):
+            lista_palavras_falhas.append(palavra_falha)
+    
+    return lista_palavras_falhas
+
 
 def hashSomaAscii(palavra: str, tamanho_tabela: int):
     soma_ascii = 0
@@ -161,20 +184,28 @@ def maxBucket(tabela_hash):
     maior_bucket = max(tabela_hash, key=len)
     return maior_bucket, len(maior_bucket)
 
-def extrairMetricasComparacao(tabela_hash, n, M):
-    """Calcula as métricas de sucesso e falha para a tabela hash."""
+
+def simularBuscas(tabela_hash, lista_palavras_sucesso, lista_palavras_falha, funcao_hash, M):
+    # --- SUCESSO ---
     total_comp_success = 0
-    
-    for bucket in tabela_hash:
-        tamanho = len(bucket)
-        # Progressão aritmética para o sucesso: (n * (n + 1)) / 2
-        total_comp_success += (tamanho * (tamanho + 1)) / 2
-        
-    avg_comp_success = total_comp_success / n if n > 0 else 0
-    
-    # Falha: percorre todo o bucket (soma de todos os tamanhos)
-    total_comp_fail = sum(len(bucket) for bucket in tabela_hash)
-    avg_comp_fail = total_comp_fail / M if M > 0 else 0
+    for palavra in lista_palavras_sucesso:
+        bucket = funcao_hash(palavra, M)
+        for p in tabela_hash[bucket]:
+            total_comp_success += 1
+            if p == palavra:
+                break # Encontrou
+                
+    # --- FALHA ---
+    total_comp_fail = 0
+    for palavra in lista_palavras_falha:
+        bucket = funcao_hash(palavra, M)
+        for p in tabela_hash[bucket]:
+            total_comp_fail += 1
+            if p == palavra: # Na teoria nunca vai entrar aqui, pois são palavras ausentes
+                break
+                
+    avg_comp_success = total_comp_success / len(lista_palavras_sucesso) if lista_palavras_sucesso else 0
+    avg_comp_fail = total_comp_fail / len(lista_palavras_falha) if lista_palavras_falha else 0
     
     return total_comp_success, avg_comp_success, total_comp_fail, avg_comp_fail
 
@@ -198,6 +229,8 @@ def gerarRelatorioCompleto():
     ]
     
     nome_arquivo = "relatorio_final_hash.csv"
+
+    lista_palavras_falhas = gerar_lista_palavras_falhas()
     
     with open(nome_arquivo, 'w', newline='', encoding='utf-8') as f:
         escritor = csv.writer(f)
@@ -223,7 +256,7 @@ def gerarRelatorioCompleto():
                     _, tam_maior = maxBucket(tabela)
                     
                     # Calcula o sucesso/falha
-                    tc_success, ac_success, tc_fail, ac_fail = extrairMetricasComparacao(tabela, n, M)
+                    tc_success, ac_success, tc_fail, ac_fail = simularBuscas(tabela, lista_palavras, lista_palavras_falhas, funcao, M)
                     
                     # Monta a linha com os dados formatados
                     linha = [
