@@ -2,7 +2,7 @@
 
 Este projeto foi desenvolvido para a disciplina **GCT153 - Estruturas de Dados II (UFLA)**. O objetivo é implementar e comparar diferentes funções de hashing utilizando textos reais (*Quincas Borba* e *A Tale of Two Cities*), analisando métricas de colisão, fator de carga e custo de busca.
 
-## 🚀 Como Executar o Projeto
+## Como Executar o Projeto
 
 Siga os passos abaixo para configurar o ambiente e rodar o script.
 
