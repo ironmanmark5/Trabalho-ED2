@@ -280,7 +280,7 @@ def montarGrafico(resultados_cenario, nome_texto, tamanho_m):
 if __name__ == "__main__":
 
     while True:
-        opcao = int(input("Qual operação você deseja executar?\n1 - Buscar palavra\n2 - Imprimir gráfico\n3 - Imprimir métricas da função\n4 - Gerar planilha\n5 - Encerrar programa\nDigite a opção desejada: "))
+        opcao = int(input("Qual operação você deseja executar?\n1 - Buscar palavra\n2 - Imprimir gráfico\n3 - Imprimir métricas da função\n4 - Gerar planílha\n5 - Encerrar programa\nDigite a opção desejada: "))
 
         if(opcao == 1):
             tabelas_hash = {}
